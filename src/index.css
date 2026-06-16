@@ -1,0 +1,118 @@
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --text: #475569;
+  --text-h: #0f172a;
+  --bg: #ffffff;
+  --border-color: #e2e8f0;
+  --code-bg: #f8fafc;
+  --accent-color: #2563eb;
+  --accent-bg: #dbeafe;
+  --accent-border: #3b82f6;
+
+  --sans: 'Geist Variable', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: 'Geist Variable', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  font: 16px/150% var(--sans);
+  color-scheme: light;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--heading);
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+p {
+  margin: 0;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 2px 6px;
+  background: var(--code-bg);
+  border-radius: 4px;
+  color: var(--text-h);
+}
+
+@layer base {
+  .theme {
+    --font-heading: var(--sans);
+    --font-sans: var(--sans);
+  }
+  
+  :root {
+    --background: #FFFFFF;
+    --foreground: #0F172A;
+    --card: #FFFFFF;
+    --card-foreground: #0F172A;
+    --popover: #FFFFFF;
+    --popover-foreground: #0F172A;
+    --primary: #2563EB;
+    --primary-foreground: #FFFFFF;
+    --secondary: #F8FAFC;
+    --secondary-foreground: #0F172A;
+    --muted: #F8FAFC;
+    --muted-foreground: #64748B;
+    --accent: #F8FAFC;
+    --accent-foreground: #0F172A;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --border: #E2E8F0;
+    --input: #E2E8F0;
+    --ring: #3B82F6;
+    
+    --radius: 1rem;
+    
+    --sidebar: #F8FAFC;
+    --sidebar-foreground: #0F172A;
+    --sidebar-primary: #2563EB;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #DBEAFE;
+    --sidebar-accent-foreground: #2563EB;
+    --sidebar-border: #E2E8F0;
+    --sidebar-ring: #3B82F6;
+  }
+
+  * {
+    @apply border-border;
+    outline-color: color-mix(in srgb, var(--ring) 50%, transparent);
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
