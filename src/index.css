@@ -151,4 +151,22 @@ code {
   .markdown-content blockquote {
     @apply border-l-4 border-muted-foreground/30 pl-4 italic my-4 text-muted-foreground;
   }
+  .markdown-content table {
+    @apply w-full text-sm text-left mb-6 border-collapse rounded-lg overflow-hidden shadow-sm ring-1 ring-border;
+  }
+  .markdown-content thead {
+    @apply bg-muted/80 text-muted-foreground text-xs uppercase font-medium tracking-wider;
+  }
+  .markdown-content th {
+    @apply px-4 py-3 font-semibold border-b border-border;
+  }
+  .markdown-content td {
+    @apply px-4 py-3 border-b border-border text-foreground/90;
+  }
+  .markdown-content tr:last-child td {
+    @apply border-0;
+  }
+  .markdown-content tr {
+    @apply bg-card transition-colors hover:bg-muted/50;
+  }
 }
