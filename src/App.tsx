@@ -1,24 +1,19 @@
-import { useState, useEffect } from "react";
-import { DocumentSidebar } from "./components/DocumentSidebar";
-import type { DocumentItem } from "./components/DocumentSidebar";
-import { ChatArea } from "./components/ChatArea";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { Message } from "./components/ChatArea";
+import { ChatArea } from "./components/ChatArea";
+import type { DocumentItem } from "./components/DocumentSidebar";
+import { DocumentSidebar } from "./components/DocumentSidebar";
 import { EmptyState } from "./components/EmptyState";
 import { UploadState } from "./components/UploadState";
-import { toast } from "sonner";
-import { INITIAL_DOCS, INITIAL_MESSAGES } from "./mockData";
-import { useFileUpload } from "./hooks/useFileUpload";
 import { useChat } from "./hooks/useChat";
-
-const API_URL = "http://127.0.0.1:8000";
+import { useFileUpload } from "./hooks/useFileUpload";
+import { api } from "./lib/api";
 
 export default function App() {
-  const [documents, setDocuments] = useState<DocumentItem[]>(INITIAL_DOCS);
-  const [selectedDocId, setSelectedDocId] = useState<string | null>(
-    INITIAL_DOCS[0].id,
-  );
-  const [messages, setMessages] =
-    useState<Record<string, Message[]>>(INITIAL_MESSAGES);
+  const [documents, setDocuments] = useState<DocumentItem[]>([]);
+  const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [backendOnline, setBackendOnline] = useState(false);
@@ -26,7 +21,6 @@ export default function App() {
   const selectedDoc = documents.find((doc) => doc.id === selectedDocId);
 
   const { handleFileUpload } = useFileUpload({
-    backendOnline,
     setDocuments,
     setSelectedDocId,
     setIsUploading,
@@ -34,9 +28,7 @@ export default function App() {
   });
 
   const { handleSendMessage } = useChat({
-    backendOnline,
     selectedDocId,
-    selectedDoc,
     setMessages,
     setIsLoading,
   });
@@ -45,22 +37,16 @@ export default function App() {
   useEffect(() => {
     async function checkBackend() {
       try {
-        const response = await fetch(`${API_URL}/documents`);
-        if (response.ok) {
-          const docs = await response.json();
-          setDocuments(docs);
-          setBackendOnline(true);
-          if (docs.length > 0) {
-            setSelectedDocId(docs[0].id);
-          }
+        const docs = await api.getDocuments();
+        setDocuments(docs);
+        setBackendOnline(true);
+        if (docs.length > 0) {
+          setSelectedDocId(docs[0].id);
         }
       } catch (err) {
-        console.warn(
-          "Backend server offline. Falling back to mock client-side flow.",
-          err,
-        );
-        toast.warning("Backend Offline", {
-          description: "Falling back to mock client-side flow.",
+        console.error("Backend server offline.", err);
+        toast.error("Backend Offline", {
+          description: "Could not connect to the server.",
         });
         setBackendOnline(false);
       }

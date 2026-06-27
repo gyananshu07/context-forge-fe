@@ -1,6 +1,8 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bot, User } from "lucide-react";
 import { useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { Citation, Message } from "./ChatArea";
 
 interface ChatMessageListProps {
@@ -29,48 +31,69 @@ export function ChatMessageList({
 
   // Helper to parse message text and render custom style for citations
   const renderMessageContent = (content: string, citations?: Citation[]) => {
-    if (!citations || citations.length === 0)
-      return (
-        <p className="whitespace-pre-wrap leading-relaxed text-[0.9375rem]">
-          {content}
-        </p>
+    let processedContent = content;
+    if (citations && citations.length > 0) {
+      // Replace [1] with [1](#citation-1) to intercept in ReactMarkdown
+      processedContent = content.replace(
+        /\[(\d+)\]/g,
+        (match, id) => `[${match}](#citation-${id})`,
       );
+    }
 
-    // Simple regex to match pattern [1], [2], etc.
-    const parts = content.split(/(\[\d+\])/g);
     return (
-      <p className="whitespace-pre-wrap leading-relaxed text-[0.9375rem]">
-        {parts.map((part, index) => {
-          const match = part.match(/^\[(\d+)\]$/);
-          if (match) {
-            const citeNum = parseInt(match[1], 10);
-            const citation = citations.find(
-              (c) => parseInt(c.id, 10) === citeNum || c.id === match[1],
-            );
-            if (citation) {
+      <div className="markdown-content">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            a: ({ href, children, ...props }) => {
+              if (href?.startsWith("#citation-")) {
+                const citeNum = href.replace("#citation-", "");
+                const citation = citations?.find(
+                  (c) =>
+                    parseInt(c.id, 10) === parseInt(citeNum, 10) ||
+                    c.id === citeNum,
+                );
+                if (citation) {
+                  return (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onCitationClick(citation);
+                      }}
+                      className="inline-flex items-center justify-center px-2 py-0.5 mx-1 rounded-full text-[0.6875rem] font-bold bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100 hover:border-blue-200 transition-all cursor-pointer shadow-sm group no-underline align-middle"
+                      title={`Source: ${citation.source}, Page ${citation.page}`}
+                    >
+                      <span className="opacity-70 group-hover:opacity-100 mr-0.5">
+                        Page
+                      </span>
+                      {citation.page}
+                    </button>
+                  );
+                }
+              }
               return (
-                <button
-                  key={index}
-                  onClick={() => onCitationClick(citation)}
-                  className="inline-flex items-center justify-center px-2 py-0.5 mx-1 rounded-full text-[0.6875rem] font-bold bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100 hover:border-blue-200 transition-all cursor-pointer shadow-sm group"
-                  title={`Source: ${citation.source}, Page ${citation.page}`}
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:underline"
+                  {...props}
                 >
-                  <span className="opacity-70 group-hover:opacity-100 mr-0.5">
-                    Page
-                  </span>
-                  {citation.page}
-                </button>
+                  {children}
+                </a>
               );
-            }
-          }
-          return part;
-        })}
-      </p>
+            },
+          }}
+        >
+          {processedContent}
+        </ReactMarkdown>
+      </div>
     );
   };
 
   return (
-    <ScrollArea ref={scrollContainerRef} className="flex-1 px-5 py-6">
+    <ScrollArea ref={scrollContainerRef} className="flex-1 min-h-0 px-5 py-6">
       <div className="max-w-4xl mx-auto space-y-5">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center space-y-6 animate-in fade-in zoom-in duration-500">

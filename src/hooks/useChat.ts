@@ -1,34 +1,83 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { toast } from "sonner";
-import type { DocumentItem } from "../components/DocumentSidebar";
-import type { Message, Citation } from "../components/ChatArea";
-import { MOCK_CITATIONS } from "../mockData";
-
-const API_URL = "http://127.0.0.1:8000";
+import type { Message } from "../components/ChatArea";
+import { api } from "../lib/api";
 
 interface UseChatProps {
-  backendOnline: boolean;
   selectedDocId: string | null;
-  selectedDoc?: DocumentItem;
   setMessages: React.Dispatch<React.SetStateAction<Record<string, Message[]>>>;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export function useChat({
-  backendOnline,
   selectedDocId,
-  selectedDoc,
   setMessages,
   setIsLoading,
 }: UseChatProps) {
+  useEffect(() => {
+    if (!selectedDocId || selectedDocId.toString().startsWith("temp-")) return;
+
+    const controller = new AbortController();
+
+    const fetchHistory = async () => {
+      // Check if we already have history loaded to avoid flashing the loader
+      let needsLoadingSpinner = true;
+      setMessages((prev) => {
+        if (prev[selectedDocId] !== undefined) {
+          needsLoadingSpinner = false;
+        }
+        return prev;
+      });
+
+      if (needsLoadingSpinner) {
+        setIsLoading(true);
+      }
+
+      try {
+        const history = await api.getChatHistory(selectedDocId, {
+          signal: controller.signal,
+        });
+        setMessages((prev) => ({
+          ...prev,
+          [selectedDocId]: history,
+        }));
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return;
+        }
+        console.error("Failed to fetch chat history:", err);
+        toast.error("Failed to load chat history");
+      }
+
+      // Only turn off the loader if this fetch wasn't aborted by a newer one
+      if (!controller.signal.aborted && needsLoadingSpinner) {
+        setIsLoading(false);
+      }
+    };
+
+    // If we already have the messages, we can still fetch in the background to ensure it's up to date
+    fetchHistory();
+
+    return () => {
+      controller.abort();
+    };
+  }, [selectedDocId, setMessages, setIsLoading]);
+
   const handleSendMessage = async (content: string) => {
-    if (!selectedDocId) return;
+    if (
+      !selectedDocId ||
+      !content.trim() ||
+      selectedDocId.toString().startsWith("temp-")
+    )
+      return;
 
     const userMessage: Message = {
       id: `u-${Date.now()}`,
       role: "user",
       content,
     };
+
+    const assistantId = `a-${Date.now()}`;
 
     setMessages((prev) => ({
       ...prev,
@@ -37,97 +86,44 @@ export function useChat({
 
     setIsLoading(true);
 
-    if (
-      backendOnline &&
-      !selectedDocId.startsWith("temp") &&
-      !selectedDocId.startsWith("doc-")
-    ) {
-      try {
-        const response = await fetch(`${API_URL}/chat`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            document_id: selectedDocId,
-            message: content,
-          }),
-        });
-
-        if (!response.ok) throw new Error("Chat request failed");
-
-        const chatResponse = await response.json();
-        setMessages((prev) => ({
-          ...prev,
-          [selectedDocId]: [...(prev[selectedDocId] || []), chatResponse],
-        }));
-        setIsLoading(false);
-        return;
-      } catch (err) {
-        console.error("Error getting response from backend:", err);
-        toast.error("Chat Failed", {
-          description: "Could not reach the backend service.",
-        });
-      }
-    }
-
-    // Mock Client-Side response (Fallback)
-    setTimeout(() => {
-      let aiResponse =
-        "I am not sure I understand the question based on the document. Could you rephrase?";
-      let citations: Citation[] = [];
-
-      if (selectedDocId === "doc-1") {
-        if (
-          content.toLowerCase().includes("transformer") ||
-          content.toLowerCase().includes("attention")
-        ) {
-          aiResponse =
-            "The Transformer architecture utilizes self-attention mechanisms to learn global dependencies between input and output [1]. It does not use recurrent layers, enabling vastly more parallelization during training.";
-          citations = MOCK_CITATIONS.Transformer;
+    try {
+      let isFirstChunk = true;
+      await api.chatStream(selectedDocId, content, (chunk) => {
+        if (isFirstChunk) {
+          setIsLoading(false);
+          isFirstChunk = false;
+          setMessages((prev) => {
+            const docMessages = prev[selectedDocId] || [];
+            return {
+              ...prev,
+              [selectedDocId]: [
+                ...docMessages,
+                { id: assistantId, role: "assistant", content: chunk },
+              ],
+            };
+          });
         } else {
-          aiResponse =
-            "Based on the paper, the Transformer outperforms recurrent and convolutional models in translation tasks [1]. Let me know if you want detailed information on multi-head attention.";
-          citations = MOCK_CITATIONS.Transformer;
+          setMessages((prev) => {
+            const docMessages = prev[selectedDocId] || [];
+            return {
+              ...prev,
+              [selectedDocId]: docMessages.map((msg) =>
+                msg.id === assistantId
+                  ? { ...msg, content: msg.content + chunk }
+                  : msg,
+              ),
+            };
+          });
         }
-      } else if (selectedDocId === "doc-2") {
-        if (
-          content.toLowerCase().includes("performance") ||
-          content.toLowerCase().includes("gpt-4")
-        ) {
-          aiResponse =
-            "GPT-4 is a multimodal model showing human-level performance on academic benchmarks [1]. It outperforms GPT-3.5 on complex reasoning tasks.";
-          citations = MOCK_CITATIONS.Performance;
-        } else {
-          aiResponse =
-            "According to the report, GPT-4 handles both image and text inputs [1]. Would you like details on specific benchmark performance?";
-          citations = MOCK_CITATIONS.Performance;
-        }
-      } else {
-        aiResponse = `I found some information regarding "${content}" in the uploaded document [1]. Let me know if you need additional references.`;
-        citations = [
-          {
-            id: "1",
-            source: selectedDoc?.name || "Uploaded Document",
-            page: 2,
-            text: `This is a extracted reference text from the document corresponding to your query: "${content}".`,
-          },
-        ];
-      }
-
-      const assistantMessage: Message = {
-        id: `a-${Date.now()}`,
-        role: "assistant",
-        content: aiResponse,
-        citations,
-      };
-
-      setMessages((prev) => ({
-        ...prev,
-        [selectedDocId]: [...(prev[selectedDocId] || []), assistantMessage],
-      }));
+      });
+    } catch (err) {
+      console.error("Error getting response from backend:", err);
+      toast.error("Chat Failed", {
+        description: "Could not reach the backend service.",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return { handleSendMessage };
