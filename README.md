@@ -1,73 +1,52 @@
-# React + TypeScript + Vite
+# Context Forge (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, responsive React frontend for Context Forge, providing a beautiful chat interface to interact with your uploaded PDF documents. Built for speed and aesthetics.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Document Management**: Upload PDFs with real-time processing status directly from the sleek sidebar.
+- **Real-Time Streaming**: Watch the AI type out its responses in real-time via Server-Sent Events (SSE).
+- **Beautiful UI/UX**: Designed with a premium aesthetic featuring glassmorphism, fluid micro-animations, and smooth gradients.
+- **Markdown Support**: Renders complex AI responses, including code blocks, lists, and tables effortlessly.
+- **Optimized Experience**: Smartly caches chat history and prevents UI glitches during rapid document switching.
 
-## React Compiler
+## 🛠️ Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Framework**: React 18 + Vite
+- **Styling**: Tailwind CSS
+- **Components**: Shadcn UI + Radix UI Primitives
+- **Icons**: Lucide React
+- **Notifications**: Sonner
 
-## Expanding the ESLint configuration
+## 📦 Setup & Installation
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/gyananshu07/context-forge-fe.git
+   cd context-forge-fe
+   ```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+3. **Environment Variables:**
+   Create a `.env` file in the root directory pointing to your backend:
+   ```env
+   VITE_API_URL=http://127.0.0.1:8000
+   ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+4. **Start the Development Server:**
+   ```bash
+   npm run dev
+   ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+5. **Build for Production:**
+   ```bash
+   npm run build
+   ```
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🎨 Design Philosophy
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+This interface focuses on **Visual Excellence** and **Dynamic Interactions**. We've prioritized a clean, modern aesthetic with smooth transitions, ensuring that chatting with your documents feels both premium and blazingly fast.
