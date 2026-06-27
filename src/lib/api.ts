@@ -1,4 +1,4 @@
-import type { Message } from "../components/ChatArea";
+import type { Citation, Message } from "../components/ChatArea";
 import type { DocumentItem } from "../components/DocumentSidebar";
 
 const API_URL = "http://127.0.0.1:8000";
@@ -12,7 +12,7 @@ interface FetchOptions extends RequestInit {
  */
 export async function apiClient<T>(
   endpoint: string,
-  options: FetchOptions = {}
+  options: FetchOptions = {},
 ): Promise<T> {
   const { params, headers, ...customConfig } = options;
 
@@ -35,7 +35,7 @@ export async function apiClient<T>(
   if (!response.ok) {
     const errorBody = await response.text().catch(() => null);
     throw new Error(
-      errorBody || `API Error: ${response.status} ${response.statusText}`
+      errorBody || `API Error: ${response.status} ${response.statusText}`,
     );
   }
 
@@ -74,13 +74,13 @@ export const api = {
       },
     }),
 
-  getChatHistory: (documentId: string, options?: FetchOptions) => 
+  getChatHistory: (documentId: string, options?: FetchOptions) =>
     apiClient<Message[]>(`/chat/${documentId}`, options),
 
   chatStream: async (
     documentId: string,
     message: string,
-    onChunk: (chunk: string) => void
+    onChunk: (data: { content?: string; citations?: Citation[] }) => void,
   ) => {
     const response = await fetch(`${API_URL}/chat`, {
       method: "POST",
@@ -121,8 +121,8 @@ export const api = {
           }
           try {
             const parsed = JSON.parse(data);
-            if (parsed.content) {
-              onChunk(parsed.content);
+            if (parsed.content || parsed.citations) {
+              onChunk(parsed);
             }
           } catch (e) {
             console.error("Failed to parse SSE data:", data, e);

@@ -85,33 +85,46 @@ export function useChat({
 
     try {
       let isFirstChunk = true;
-      await api.chatStream(selectedDocId, content, (chunk) => {
+      await api.chatStream(selectedDocId, content, (data) => {
         if (isFirstChunk) {
           setIsLoading(false);
           isFirstChunk = false;
-          setMessages((prev) => {
-            const docMessages = prev[selectedDocId] || [];
+        }
+
+        setMessages((prev) => {
+          const docMessages = prev[selectedDocId] || [];
+          const msgIndex = docMessages.findIndex(
+            (msg) => msg.id === assistantId,
+          );
+
+          if (msgIndex >= 0) {
+            // Update existing message
+            const newMessages = [...docMessages];
+            const existingMsg = newMessages[msgIndex];
+            newMessages[msgIndex] = {
+              ...existingMsg,
+              content: data.content
+                ? existingMsg.content + data.content
+                : existingMsg.content,
+              citations: data.citations || existingMsg.citations,
+            };
+            return { ...prev, [selectedDocId]: newMessages };
+          } else {
+            // Create new message
             return {
               ...prev,
               [selectedDocId]: [
                 ...docMessages,
-                { id: assistantId, role: "assistant", content: chunk },
+                {
+                  id: assistantId,
+                  role: "assistant",
+                  content: data.content || "",
+                  citations: data.citations,
+                },
               ],
             };
-          });
-        } else {
-          setMessages((prev) => {
-            const docMessages = prev[selectedDocId] || [];
-            return {
-              ...prev,
-              [selectedDocId]: docMessages.map((msg) =>
-                msg.id === assistantId
-                  ? { ...msg, content: msg.content + chunk }
-                  : msg,
-              ),
-            };
-          });
-        }
+          }
+        });
       });
     } catch (err) {
       console.error("Error getting response from backend:", err);

@@ -47,18 +47,26 @@ export function ChatMessageList({
           components={{
             a: ({ href, children, ...props }) => {
               if (href?.startsWith("#citation-")) {
-                const citeNum = href.replace("#citation-", "");
-                const citation = citations?.find(
+                const citeNumStr = href.replace("#citation-", "");
+                const citeNum = parseInt(citeNumStr, 10);
+                
+                let citation = citations?.find(
                   (c) =>
-                    parseInt(c.id, 10) === parseInt(citeNum, 10) ||
-                    c.id === citeNum,
+                    c.id === citeNumStr ||
+                    c.id === `cit-${citeNum - 1}`
                 );
+
+                if (!citation && citations && !isNaN(citeNum) && citeNum > 0 && citeNum <= citations.length) {
+                  citation = citations[citeNum - 1];
+                }
+
                 if (citation) {
                   return (
                     <button
                       type="button"
                       onClick={(e) => {
                         e.preventDefault();
+                        e.stopPropagation();
                         onCitationClick(citation);
                       }}
                       className="inline-flex items-center justify-center px-2 py-0.5 mx-1 rounded-full text-[0.6875rem] font-bold bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100 hover:border-blue-200 transition-all cursor-pointer shadow-sm group no-underline align-middle"
@@ -135,6 +143,25 @@ export function ChatMessageList({
                   >
                     {renderMessageContent(message.content, message.citations)}
                   </div>
+                  {isAssistant &&
+                    message.citations &&
+                    message.citations.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-border/30 flex flex-wrap gap-2">
+                        <span className="text-[0.75rem] font-semibold text-muted-foreground self-center mr-1">
+                          Sources:
+                        </span>
+                        {message.citations.map((citation, index) => (
+                          <button
+                            key={citation.id}
+                            type="button"
+                            onClick={() => onCitationClick(citation)}
+                            className="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-[0.75rem] font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors border border-border/50 cursor-pointer shadow-sm group"
+                          >
+                            [{index + 1}] Page {citation.page}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                 </div>
                 {!isAssistant && (
                   <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground shrink-0 mt-1">
