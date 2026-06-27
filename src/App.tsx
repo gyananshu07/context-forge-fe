@@ -29,6 +29,7 @@ export default function App() {
 
   const { handleSendMessage } = useChat({
     selectedDocId,
+    messages,
     setMessages,
     setIsLoading,
   });

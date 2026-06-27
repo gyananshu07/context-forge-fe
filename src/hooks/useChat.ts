@@ -5,12 +5,14 @@ import { api } from "../lib/api";
 
 interface UseChatProps {
   selectedDocId: string | null;
+  messages: Record<string, Message[]>;
   setMessages: React.Dispatch<React.SetStateAction<Record<string, Message[]>>>;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export function useChat({
   selectedDocId,
+  messages,
   setMessages,
   setIsLoading,
 }: UseChatProps) {
@@ -21,13 +23,7 @@ export function useChat({
 
     const fetchHistory = async () => {
       // Check if we already have history loaded to avoid flashing the loader
-      let needsLoadingSpinner = true;
-      setMessages((prev) => {
-        if (prev[selectedDocId] !== undefined) {
-          needsLoadingSpinner = false;
-        }
-        return prev;
-      });
+      const needsLoadingSpinner = messages[selectedDocId] === undefined;
 
       if (needsLoadingSpinner) {
         setIsLoading(true);
@@ -61,7 +57,8 @@ export function useChat({
     return () => {
       controller.abort();
     };
-  }, [selectedDocId, setMessages, setIsLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDocId]);
 
   const handleSendMessage = async (content: string) => {
     if (
