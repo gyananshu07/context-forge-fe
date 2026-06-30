@@ -6,6 +6,7 @@ import type { DocumentItem } from "./components/DocumentSidebar";
 import { DocumentSidebar } from "./components/DocumentSidebar";
 import { EmptyState } from "./components/EmptyState";
 import { UploadState } from "./components/UploadState";
+import { ChunkingLabView } from "./components/ChunkingLab/ChunkingLabView";
 import { useChat } from "./hooks/useChat";
 import { useFileUpload } from "./hooks/useFileUpload";
 import { api } from "./lib/api";
@@ -17,6 +18,7 @@ export default function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [backendOnline, setBackendOnline] = useState(false);
+  const [isChunkingLabOpen, setIsChunkingLabOpen] = useState(false);
 
   const selectedDoc = documents.find((doc) => doc.id === selectedDocId);
 
@@ -58,6 +60,7 @@ export default function App() {
   const handleSelectDoc = (doc: DocumentItem) => {
     setSelectedDocId(doc.id);
     setIsUploading(false);
+    setIsChunkingLabOpen(false);
 
     // Initialize welcome message for newly selected document if none exists
     if (!messages[doc.id]) {
@@ -76,6 +79,13 @@ export default function App() {
 
   const handleUploadClick = () => {
     setIsUploading(true);
+    setIsChunkingLabOpen(false);
+  };
+
+  const handleLabClick = () => {
+    setIsChunkingLabOpen(true);
+    setIsUploading(false);
+    setSelectedDocId(null);
   };
 
   return (
@@ -86,6 +96,7 @@ export default function App() {
         selectedId={selectedDocId}
         onSelect={handleSelectDoc}
         onUploadClick={handleUploadClick}
+        onLabClick={handleLabClick}
       />
 
       {/* Main Content Area */}
@@ -93,7 +104,9 @@ export default function App() {
         {/* Banner indicating backend status */}
         <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
 
-        {isUploading ? (
+        {isChunkingLabOpen ? (
+          <ChunkingLabView />
+        ) : isUploading ? (
           <UploadState
             onUpload={handleFileUpload}
             onClear={() => setIsUploading(false)}

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus } from "lucide-react";
+import { Plus, FlaskConical } from "lucide-react";
 import { DocumentSidebarItem } from "./DocumentSidebarItem";
 
 export interface DocumentItem {
@@ -15,6 +15,7 @@ interface DocumentSidebarProps {
   selectedId?: string | null;
   onSelect: (doc: DocumentItem) => void;
   onUploadClick: () => void;
+  onLabClick: () => void;
   onDelete?: (id: string) => void;
 }
 
@@ -23,6 +24,7 @@ export function DocumentSidebar({
   selectedId,
   onSelect,
   onUploadClick,
+  onLabClick,
   onDelete,
 }: DocumentSidebarProps) {
   return (
@@ -40,7 +42,7 @@ export function DocumentSidebar({
         </div>
       </div>
 
-      <div className="px-3 pb-3">
+      <div className="px-3 pb-3 space-y-2">
         <Button
           onClick={onUploadClick}
           className="w-full justify-start space-x-2 hover:bg-black/5 bg-transparent text-foreground border-border/50 shadow-none h-9 text-[0.8125rem] font-medium"
@@ -48,6 +50,14 @@ export function DocumentSidebar({
         >
           <Plus className="w-4 h-4 text-muted-foreground" />
           <span>New Document</span>
+        </Button>
+        <Button
+          onClick={onLabClick}
+          className="w-full justify-start space-x-2 hover:bg-black/5 bg-transparent text-foreground border-border/50 shadow-none h-9 text-[0.8125rem] font-medium"
+          variant="outline"
+        >
+          <FlaskConical className="w-4 h-4 text-muted-foreground" />
+          <span>Chunking Lab</span>
         </Button>
       </div>
 

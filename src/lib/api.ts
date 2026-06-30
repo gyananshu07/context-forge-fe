@@ -50,6 +50,33 @@ export interface UploadDocumentResponse {
   status: string;
 }
 
+export interface ChunkMetadata {
+  [key: string]: unknown;
+}
+
+export interface ChunkItem {
+  id: string;
+  text: string;
+  length: number;
+  metadata: ChunkMetadata;
+}
+
+export interface ParentChildChunk {
+  parent: ChunkItem;
+  children: ChunkItem[];
+}
+
+export interface ChunkVisualizeResponse {
+  chunks?: ChunkItem[];
+  parent_child_chunks?: ParentChildChunk[];
+}
+
+export interface ChunkEvaluateResponse {
+  results?: ChunkItem[];
+  retrieved_parents?: ChunkItem[];
+  retrieved_children?: ChunkItem[];
+}
+
 /**
  * Specific API methods for the application
  */
@@ -130,5 +157,37 @@ export const api = {
         }
       }
     }
+  },
+
+  chunkVisualize: (
+    file: File,
+    strategy: string,
+    params: Record<string, unknown>,
+  ) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("strategy", strategy);
+    formData.append("params", JSON.stringify(params));
+    return apiClient<ChunkVisualizeResponse>("/chunking-lab/visualize", {
+      method: "POST",
+      body: formData,
+    });
+  },
+
+  chunkEvaluate: (
+    file: File,
+    strategy: string,
+    query: string,
+    params: Record<string, unknown>,
+  ) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("strategy", strategy);
+    formData.append("query", query);
+    formData.append("params", JSON.stringify(params));
+    return apiClient<ChunkEvaluateResponse>("/chunking-lab/evaluate", {
+      method: "POST",
+      body: formData,
+    });
   },
 };
